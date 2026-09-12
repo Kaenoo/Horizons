@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter,
+    sans-serif;
+
+  --color-canvas: oklch(0.97 0.004 285);
+  --color-surface: oklch(1 0 0);
+  --color-elevated: oklch(0.945 0.006 285);
+  --color-ink: oklch(0.24 0.03 285);
+  --color-subtle: oklch(0.5 0.02 285);
+  --color-faint: oklch(0.68 0.015 285);
+  --color-line: oklch(0.9 0.01 285);
+
+  --color-accent: oklch(0.56 0.21 280);
+  --color-accent-strong: oklch(0.48 0.22 280);
+  --color-accent-soft: oklch(0.56 0.21 280 / 0.12);
+  --color-on-accent: oklch(0.99 0 0);
+
+  --color-court: oklch(0.77 0.16 85);
+  --color-court-soft: oklch(0.77 0.16 85 / 0.14);
+  --color-moyen: oklch(0.7 0.12 200);
+  --color-moyen-soft: oklch(0.7 0.12 200 / 0.14);
+  --color-long: oklch(0.6 0.2 290);
+  --color-long-soft: oklch(0.6 0.2 290 / 0.14);
+
+  --color-ok: oklch(0.65 0.18 155);
+  --color-ok-soft: oklch(0.65 0.18 155 / 0.14);
+  --color-warn: oklch(0.72 0.16 70);
+  --color-danger: oklch(0.62 0.22 25);
+  --color-danger-soft: oklch(0.62 0.22 25 / 0.12);
+}
+
+.dark {
+  --color-canvas: oklch(0.155 0.022 285);
+  --color-surface: oklch(0.205 0.026 285);
+  --color-elevated: oklch(0.245 0.028 285);
+  --color-ink: oklch(0.94 0.012 285);
+  --color-subtle: oklch(0.68 0.02 285);
+  --color-faint: oklch(0.52 0.02 285);
+  --color-line: oklch(0.29 0.03 285);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.45;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+@layer components {
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.anim-fade-in {
+  animation: fade-in 0.22s ease both;
+}
+.anim-sheet-up {
+  animation: sheet-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.anim-scale-in {
+  animation: scale-in 0.18s ease both;
+}
+.anim-view {
+  animation: view-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-check {
+  animation: check-pop 0.22s ease both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes check-pop {
+  0% { transform: scale(0.55); }
+  60% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
