@@ -1,10 +1,22 @@
 import { useEffect, useState } from 'react'
 
+function detectEnvironment() {
+  if (typeof window === 'undefined') {
+    return { isIOS: false, standalone: false, supportsInstallPrompt: false }
+  }
+  const ua = window.navigator.userAgent
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const standalone = window.matchMedia('(display-mode: standalone)').matches
+  const supportsInstallPrompt = 'onbeforeinstallprompt' in window
+  return { isIOS, standalone, supportsInstallPrompt }
+}
+
 export default function useInstallPrompt() {
+  const env = detectEnvironment()
   const [installPrompt, setInstallPrompt] = useState(null)
-  const [installed, setInstalled] = useState(
-    typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches,
-  )
+  const [installed, setInstalled] = useState(env.standalone)
 
   useEffect(() => {
     const onPrompt = (e) => {
@@ -24,11 +36,18 @@ export default function useInstallPrompt() {
   }, [])
 
   const promptInstall = async () => {
-    installPrompt?.prompt()
-    await installPrompt?.userChoice
+    const prompt = installPrompt
+    if (!prompt) return
+    prompt.prompt()
+    await prompt.userChoice
     setInstalled(true)
     setInstallPrompt(null)
   }
 
-  return { canInstall: Boolean(installPrompt), installed, promptInstall }
+  return {
+    installed,
+    isIOS: env.isIOS,
+    canInstall: Boolean(installPrompt) && !env.standalone,
+    promptInstall,
+  }
 }

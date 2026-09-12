@@ -59,12 +59,13 @@ export default function Settings() {
   const goals = useGoals((s) => s.goals)
   const importGoals = useGoals((s) => s.importGoals)
   const resetAll = useGoals((s) => s.resetAll)
-  const { canInstall, installed, promptInstall } = useInstallPrompt()
+  const { installed, isIOS, canInstall, promptInstall } = useInstallPrompt()
 
   const fileRef = useRef(null)
 
   const [confirmReset, setConfirmReset] = useState(false)
   const [resetHappened, setResetHappened] = useState(false)
+  const [showIosInstall, setShowIosInstall] = useState(false)
   const [pendingImport, setPendingImport] = useState(null)
   const [importMessage, setImportMessage] = useState(null)
   const [importError, setImportError] = useState(null)
@@ -208,14 +209,25 @@ export default function Settings() {
       <Section title="Application">
         <div className="flex flex-col gap-2.5">
           <Row icon="download" title="Installer l’application" subtitle="Ajoutez Horizons à votre écran d’accueil.">
-            <Button
-              variant="subtle"
-              size="sm"
-              disabled={!canInstall || installed}
-              onClick={promptInstall}
-            >
-              {installed ? 'Installée' : 'Installer'}
-            </Button>
+            {installed ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-2.5 py-1 text-[11px] font-medium text-ok">
+                <Icon name="check" className="size-3.5" />
+                Installée
+              </span>
+            ) : isIOS ? (
+              <Button size="sm" onClick={() => setShowIosInstall(true)}>
+                Installer
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="subtle"
+                disabled={!canInstall}
+                onClick={promptInstall}
+              >
+                Installer
+              </Button>
+            )}
           </Row>
           <Row icon="sparkles" title="Horizons" subtitle="PWA 100% hors-ligne · v1.0.0" />
         </div>
@@ -226,6 +238,42 @@ export default function Settings() {
         <br />
         Aucune donnée n’est envoyée sur Internet.
       </p>
+
+      <Sheet open={showIosInstall} onClose={() => setShowIosInstall(false)} title="Installer sur iPhone" icon="download">
+        <div className="flex flex-col gap-5">
+          <p className="text-[13.5px] leading-relaxed text-subtle">
+            Sur iPhone, l’installation passe par Safari (impossible de l’automatiser).
+          </p>
+          <ol className="flex flex-col gap-3 text-[14px]">
+            <li className="flex items-start gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[12px] font-bold text-accent">1</span>
+              <span>
+                Ouvrez Horizons dans <strong>Safari</strong> (copiez son adresse si vous êtes
+                dans un autre navigateur).
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[12px] font-bold text-accent">2</span>
+              <span>
+                Appuyez sur le bouton <strong>Partager</strong>{' '}
+                <Icon name="upload" className="inline size-4 align-[-2px] text-subtle" /> en
+                bas de l’écran.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[12px] font-bold text-accent">3</span>
+              <span>Choisissez <strong>Ajouter à l’écran d’accueil</strong>.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[12px] font-bold text-accent">4</span>
+              <span>Touchez <strong>Ajouter</strong> en haut à droite.</span>
+            </li>
+          </ol>
+          <p className="rounded-xl bg-ok-soft px-3 py-2.5 text-[12.5px] font-medium text-ok">
+            Horizons apparaît ensuite sur votre écran d’accueil, avec ses propres données.
+          </p>
+        </div>
+      </Sheet>
 
       <Sheet
         open={Boolean(pendingImport)}
