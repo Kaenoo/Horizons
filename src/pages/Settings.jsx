@@ -101,7 +101,7 @@ export default function Settings() {
 
   return (
     <div className="anim-view flex flex-col gap-6 pb-8">
-      <header className="safe-top px-5 pt-5">
+      <header className="safe-top px-5">
         <p className="text-[13px] text-subtle">Apparence & données</p>
         <h1 className="text-[24px] font-bold tracking-tight">Réglages</h1>
       </header>

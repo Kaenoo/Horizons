@@ -33,7 +33,7 @@ export default function Stats() {
 
   return (
     <div className="anim-view flex flex-col gap-6 pb-6">
-      <header className="safe-top px-5 pt-5">
+      <header className="safe-top px-5">
         <p className="text-[13px] text-subtle">Votre progression</p>
         <h1 className="text-[24px] font-bold tracking-tight">Stats</h1>
       </header>

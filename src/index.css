@@ -91,7 +91,7 @@
   }
 
   .safe-top {
-    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-top: calc(max(env(safe-area-inset-top), 0px) + 1.25rem);
   }
 
   .no-scrollbar::-webkit-scrollbar {

@@ -88,7 +88,7 @@ export default function Home({ onOpenForm }) {
 
   return (
     <div className="anim-view flex flex-col gap-6 pb-6">
-      <header className="safe-top flex flex-col gap-1 px-5 pt-5">
+      <header className="safe-top flex flex-col gap-1 px-5">
         <p className="text-[13px] text-subtle">{subtitleForDay()}</p>
         <h1 className="text-[24px] leading-tight font-bold tracking-tight">
           {greeting()},

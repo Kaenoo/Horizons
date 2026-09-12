@@ -61,7 +61,7 @@ export default function Horizons({ onOpenForm }) {
 
   return (
     <div className="anim-view flex flex-col gap-4 pb-6">
-      <header className="safe-top flex items-center justify-between px-5 pt-5">
+      <header className="safe-top flex items-center justify-between px-5">
         <div>
           <p className="text-[13px] text-subtle">Trois horizons, un cap</p>
           <h1 className="text-[24px] font-bold tracking-tight">Horizons</h1>
