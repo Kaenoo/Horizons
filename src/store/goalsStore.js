@@ -2,9 +2,12 @@ import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { createPersister, loadState, makeKey } from './persistence'
 import { uid } from '../lib/format'
+import { advanceToFuture } from '../lib/recurrence'
 
 const GOALS_KEY = makeKey('goals')
 const STATE_VERSION = 1
+
+const RECURRENCE_IDS = ['none', 'daily', 'weekly', 'monthly', 'yearly']
 
 export function goalProgress(goal) {
   if (!goal || !Array.isArray(goal.subtasks) || goal.subtasks.length === 0) {
@@ -27,6 +30,25 @@ function normalizeSubtask(raw) {
   }
 }
 
+export function normalizeReminder(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const datetime =
+    typeof raw.datetime === 'string' &&
+    !Number.isNaN(new Date(raw.datetime).getTime())
+      ? raw.datetime
+      : null
+  if (!datetime) return null
+  const recurrence = RECURRENCE_IDS.includes(raw.recurrence)
+    ? raw.recurrence
+    : 'none'
+  const nextAt =
+    typeof raw.nextAt === 'string' &&
+    !Number.isNaN(new Date(raw.nextAt).getTime())
+      ? raw.nextAt
+      : datetime
+  return { datetime, recurrence, nextAt }
+}
+
 export function normalizeGoal(raw) {
   if (!raw || typeof raw !== 'object') return null
   const category = ['short', 'medium', 'long'].includes(raw.category)
@@ -43,6 +65,7 @@ export function normalizeGoal(raw) {
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
     dueDate: typeof raw.dueDate === 'string' ? raw.dueDate : null,
+    reminder: normalizeReminder(raw.reminder),
     subtasks: Array.isArray(raw.subtasks)
       ? raw.subtasks.map(normalizeSubtask).filter(Boolean)
       : [],
@@ -60,11 +83,14 @@ export const useGoals = create((set, _get) => ({
   hasHydrated: true,
   activeView: 'home',
   horizonsTab: 'short',
+  lastFired: null,
 
   setActiveView: (view) => set({ activeView: view }),
   setHorizonsTab: (tab) => set({ horizonsTab: tab }),
+  setLastFired: (payload) => set({ lastFired: payload }),
+  clearLastFired: () => set({ lastFired: null }),
 
-  addGoal: ({ title, category = 'short', dueDate = null, status = 'todo', subtasks = [] }) => {
+  addGoal: ({ title, category = 'short', dueDate = null, status = 'todo', subtasks = [], reminder = null }) => {
     const now = new Date().toISOString()
     const goal = normalizeGoal({
       id: uid(),
@@ -72,6 +98,7 @@ export const useGoals = create((set, _get) => ({
       category,
       status,
       dueDate: dueDate || null,
+      reminder,
       subtasks,
       createdAt: now,
       updatedAt: now,
@@ -108,6 +135,22 @@ export const useGoals = create((set, _get) => ({
       goals: s.goals.map((g) =>
         g.id === id ? { ...g, status, updatedAt } : g,
       ),
+    }))
+  },
+
+  advanceReminder: (goalId) => {
+    const updatedAt = new Date().toISOString()
+    set((s) => ({
+      goals: s.goals.map((g) => {
+        if (g.id !== goalId || !g.reminder) return g
+        const base = new Date(g.reminder.nextAt || g.reminder.datetime)
+        const next = advanceToFuture(base, g.reminder.recurrence)
+        return {
+          ...g,
+          updatedAt,
+          reminder: next ? { ...g.reminder, nextAt: next.toISOString() } : null,
+        }
+      }),
     }))
   },
 
@@ -179,3 +222,26 @@ export const useGoalsOfCategory = (category) =>
   useGoals(
     useShallow((s) => s.goals.filter((g) => g.category === category)),
   )
+
+export function dueReminders(goals, now = new Date()) {
+  return goals.filter(
+    (g) =>
+      g.reminder &&
+      g.reminder.nextAt &&
+      g.status !== 'done' &&
+      new Date(g.reminder.nextAt) <= now,
+  )
+}
+
+export function upcomingReminders(goals, limit = 5) {
+  return goals
+    .filter(
+      (g) =>
+        g.reminder &&
+        g.reminder.nextAt &&
+        g.status !== 'done' &&
+        new Date(g.reminder.nextAt) > new Date(),
+    )
+    .sort((a, b) => (a.reminder.nextAt > b.reminder.nextAt ? 1 : -1))
+    .slice(0, limit)
+}

@@ -1,8 +1,22 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGoals } from '../store/goalsStore'
 import { exportGoalsToFile, readImportFile } from '../lib/io'
 import { THEME_OPTIONS, useTheme } from '../hooks/useTheme'
 import useInstallPrompt from '../hooks/useInstallPrompt'
+import {
+  clearPushConfig,
+  disablePush,
+  enablePush,
+  isInstalledPwa,
+  loadPushConfig,
+  pushCapable,
+  pushOnIos,
+  savePushConfig,
+} from '../lib/push'
+import {
+  notificationPermission,
+  requestNotificationPermission,
+} from '../lib/notify'
 import Button from '../components/ui/Button'
 import ConfirmSheet from '../components/ui/ConfirmSheet'
 import Icon from '../components/ui/Icon'
@@ -70,6 +84,36 @@ export default function Settings() {
   const [importMessage, setImportMessage] = useState(null)
   const [importError, setImportError] = useState(null)
 
+  const [perm, setPerm] = useState(notificationPermission())
+  const [permMsg, setPermMsg] = useState(null)
+  const [permError, setPermError] = useState(null)
+
+  const initialConfig = loadPushConfig()
+  const [configUrl, setConfigUrl] = useState(initialConfig?.url ?? '')
+  const [configKey, setConfigKey] = useState(initialConfig?.anonKey ?? '')
+  const [configVapid, setConfigVapid] = useState(initialConfig?.vapidPublicKey ?? '')
+  const [editingConfig, setEditingConfig] = useState(!initialConfig)
+  const [configSaved, setConfigSaved] = useState(Boolean(initialConfig))
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushMsg, setPushMsg] = useState(null)
+  const [pushError, setPushError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const reg = await navigator.serviceWorker?.ready
+        const sub = await reg?.pushManager?.getSubscription()
+        if (!cancelled) setPushEnabled(Boolean(sub))
+      } catch {
+        /* ignore */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const storageKb = useMemo(() => {
     try {
       const bytes = new Blob([JSON.stringify(goals)]).size
@@ -100,6 +144,67 @@ export default function Settings() {
     )
   }
 
+  const requestPerm = async () => {
+    setPermMsg(null)
+    setPermError(null)
+    const result = await requestNotificationPermission()
+    setPerm(result)
+    if (result === 'granted') setPermMsg('Notifications autorisées.')
+    else if (result === 'denied') setPermError('Autorisation refusée. Réactivez-la dans les réglages du navigateur.')
+  }
+
+  const saveConfig = () => {
+    setPushError(null)
+    if (!configUrl.trim() || !configKey.trim() || !configVapid.trim()) {
+      setPushError('Les trois champs sont requis pour activer le push.')
+      return
+    }
+    savePushConfig({
+      url: configUrl.trim(),
+      anonKey: configKey.trim(),
+      vapidPublicKey: configVapid.trim(),
+    })
+    setConfigSaved(true)
+    setEditingConfig(false)
+    setPushMsg('Configuration enregistrée. La prochaine sync des rappels utilisera Supabase.')
+  }
+
+  const removeConfig = () => {
+    disablePush()
+    clearPushConfig()
+    setConfigUrl('')
+    setConfigKey('')
+    setConfigVapid('')
+    setEditingConfig(true)
+    setConfigSaved(false)
+    setPushEnabled(false)
+    setPushMsg(null)
+  }
+
+  const activatePush = async () => {
+    setPushError(null)
+    setPushMsg(null)
+    const res = await enablePush()
+    setPerm(notificationPermission())
+    if (res.ok) {
+      setPushEnabled(true)
+      setPushMsg('Notifications push activées sur cet appareil.')
+    } else if (res.reason === 'permission') {
+      setPushError('Autorisation de notification refusée.')
+    } else {
+      setPushError('Impossible de s’abonner. Vérifiez clés et URL, puis que l’app est installée (iPhone).')
+    }
+  }
+
+  const deactivatePush = async () => {
+    await disablePush()
+    setPushEnabled(false)
+    setPushMsg('Notifications push désactivées.')
+  }
+
+  const pushCapableHere = pushCapable()
+  const needIosInstall = pushOnIos() && !isInstalledPwa()
+
   return (
     <div className="anim-view flex flex-col gap-6 pb-8">
       <header className="safe-top px-5">
@@ -121,6 +226,184 @@ export default function Settings() {
             onChange={setTheme}
             className="mt-3"
           />
+        </div>
+      </Section>
+
+      <Section title="Notifications">
+        <div className="flex flex-col gap-2.5">
+          <Row
+            icon="bell"
+            title="Notifications système"
+            subtitle={
+              perm === 'granted'
+                ? 'Les rappels s’affichent hors de l’app.'
+                : perm === 'denied'
+                  ? 'Bloquées par le navigateur.'
+                  : perm === 'unsupported'
+                    ? 'Non prises en charge par ce navigateur.'
+                    : 'À autoriser pour recevoir des rappels.'
+            }
+          >
+            {perm === 'granted' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-2.5 py-1 text-[11px] font-medium text-ok">
+                <Icon name="check" className="size-3.5" />
+                Autorisées
+              </span>
+            ) : perm === 'denied' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-1 text-[11px] font-medium text-danger">
+                Refusées
+              </span>
+            ) : perm === 'unsupported' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-elevated px-2.5 py-1 text-[11px] font-medium text-subtle">
+                Non supporté
+              </span>
+            ) : (
+              <Button size="sm" onClick={requestPerm}>
+                Autoriser
+              </Button>
+            )}
+          </Row>
+          {permMsg && (
+            <p className="anim-fade-in flex items-center gap-1.5 px-1 text-[12.5px] text-ok">
+              <Icon name="check" className="size-4" />
+              {permMsg}
+            </p>
+          )}
+          {permError && (
+            <p className="anim-fade-in flex items-center gap-1.5 px-1 text-[12.5px] text-danger">
+              <Icon name="alert" className="size-4" />
+              {permError}
+            </p>
+          )}
+
+          <Row
+            icon="send"
+            title="Notifications push (Supabase)"
+            subtitle={
+              configSaved && pushEnabled
+                ? 'Actives — rappels livrés même app fermée (iPhone si installée).'
+                : configSaved
+                  ? 'Configurées — bouton pour s’abonner sur cet appareil.'
+                  : 'Optionnel. Envoie les rappels via un projet Supabase.'
+            }
+          >
+            {pushEnabled ? (
+              <Button size="sm" variant="subtle" onClick={deactivatePush}>
+                Désactiver
+              </Button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-elevated px-2.5 py-1 text-[11px] font-medium text-subtle">
+                {configSaved ? 'Prête' : 'Hors-ligne'}
+              </span>
+            )}
+          </Row>
+
+          {!editingConfig && configSaved && (
+            <div className="rounded-2xl border border-line bg-surface p-4">
+              <div className="flex flex-wrap gap-2">
+                {!pushCapableHere ? (
+                  <p className="w-full text-[12.5px] text-subtle">
+                    {needIosInstall
+                      ? 'Sur iPhone, ajoutez d’abord l’app à l’écran d’accueil puis relancez-la depuis son icône : les notifications deviennent possibles.'
+                      : 'Ce navigateur ne prend pas en charge le Web Push.'}
+                  </p>
+                ) : pushEnabled ? null : (
+                  <Button size="sm" onClick={activatePush}>
+                    Activer les notifications
+                  </Button>
+                )}
+                <Button size="sm" variant="subtle" onClick={() => setEditingConfig(true)}>
+                  Modifier
+                </Button>
+                {!pushEnabled && (
+                  <Button size="sm" variant="ghost" onClick={removeConfig}>
+                    Effacer
+                  </Button>
+                )}
+              </div>
+              {pushMsg && (
+                <p className="anim-fade-in mt-2.5 flex items-center gap-1.5 text-[12.5px] text-ok">
+                  <Icon name="check" className="size-4" />
+                  {pushMsg}
+                </p>
+              )}
+              {pushError && (
+                <p className="anim-fade-in mt-2.5 flex items-center gap-1.5 text-[12.5px] text-danger">
+                  <Icon name="alert" className="size-4" />
+                  {pushError}
+                </p>
+              )}
+            </div>
+          )}
+
+          {(editingConfig || !configSaved) && (
+            <div className="rounded-2xl border border-line bg-surface p-4">
+              <p className="mb-3 text-[12.5px] leading-relaxed text-subtle">
+                Créez un projet sur{' '}
+                <a
+                  href="https://supabase.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-accent"
+                >
+                  supabase.com
+                </a>{' '}
+                et appliquez la migration + fonctions du dossier{' '}
+                <code className="rounded bg-elevated px-1.5 py-0.5 text-[11.5px]">supabase/</code> du
+                projet. Renseignez l’URL du projet, la clé anon et la clé publique VAPID.
+              </p>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-subtle">
+                    URL du projet Supabase
+                  </label>
+                  <input
+                    value={configUrl}
+                    onChange={(e) => setConfigUrl(e.target.value)}
+                    placeholder="https://xxxx.supabase.co"
+                    spellCheck="false"
+                    className="w-full rounded-xl border border-line bg-canvas px-3 py-2.5 text-[14px] outline-none placeholder:text-faint focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-subtle">
+                    Clé anon (publishable)
+                  </label>
+                  <input
+                    value={configKey}
+                    onChange={(e) => setConfigKey(e.target.value)}
+                    placeholder="eyJhbGciOi…"
+                    spellCheck="false"
+                    className="w-full rounded-xl border border-line bg-canvas px-3 py-2.5 text-[13px] outline-none placeholder:text-faint focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[12px] font-medium text-subtle">
+                    Clé publique VAPID
+                  </label>
+                  <input
+                    value={configVapid}
+                    onChange={(e) => setConfigVapid(e.target.value)}
+                    placeholder="BG7x…"
+                    spellCheck="false"
+                    className="w-full rounded-xl border border-line bg-canvas px-3 py-2.5 text-[13px] outline-none placeholder:text-faint focus:border-accent"
+                  />
+                </div>
+                {pushError && editingConfig && (
+                  <p className="anim-fade-in flex items-center gap-1.5 text-[12.5px] text-danger">
+                    <Icon name="alert" className="size-4" />
+                    {pushError}
+                  </p>
+                )}
+                <Button onClick={saveConfig}>Enregistrer la configuration</Button>
+              </div>
+            </div>
+          )}
+
+          <p className="px-1 text-[11.5px] leading-relaxed text-faint">
+            Le push transmet le titre de vos objectifs et les horaires de rappels vers Supabase.
+            Actif uniquement si configuré. Les données restent hors-ligne sans cette option.
+          </p>
         </div>
       </Section>
 

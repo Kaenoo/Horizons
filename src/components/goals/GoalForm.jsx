@@ -1,19 +1,47 @@
 import { useEffect, useRef, useState } from 'react'
 import { CATEGORIES, STATUSES } from '../../lib/constants'
-import { isoToDateValue, uid } from '../../lib/format'
+import {
+  datetimeLocalToISO,
+  isoToDateTimeLocal,
+  uid,
+} from '../../lib/format'
+import { RECURRENCES } from '../../lib/recurrence'
 import { useGoals } from '../../store/goalsStore'
 import Button from '../ui/Button'
 import Checkbox from '../ui/Checkbox'
 import Icon from '../ui/Icon'
 import SegmentedControl from '../ui/SegmentedControl'
 import Sheet from '../ui/Sheet'
+import Switch from '../ui/Switch'
+
+const RECURRENCE_SHORT = {
+  none: 'Aucune',
+  daily: 'Jour',
+  weekly: 'Semaine',
+  monthly: 'Mois',
+  yearly: 'Année',
+}
+
+function defaultDatetimeLocal() {
+  const d = new Date(Date.now() + 3600000)
+  d.setMinutes(0, 0, 0)
+  return isoToDateTimeLocal(d.toISOString())
+}
 
 function draftFromGoal(goal, initialTitle) {
+  const raw = goal?.reminder
   return {
     title: goal?.title ?? initialTitle ?? '',
     category: goal?.category ?? 'short',
     status: goal?.status ?? 'todo',
     dueDate: goal?.dueDate ?? '',
+    reminder: raw
+      ? {
+          enabled: true,
+          datetime: isoToDateTimeLocal(raw.datetime),
+          recurrence: raw.recurrence,
+        }
+      : { enabled: false, datetime: '', recurrence: 'none' },
     subtasks: (goal?.subtasks ?? []).map((s) => ({ ...s })),
   }
 }
@@ -65,12 +93,20 @@ export default function GoalForm({ goal, initialTitle, onClose }) {
     const subtasks = draft.subtasks
       .map((s) => ({ id: s.id, title: s.title.trim(), done: s.done }))
       .filter((s) => s.title.length > 0)
+    const reminder =
+      draft.reminder.enabled && draft.reminder.datetime
+        ? {
+            datetime: datetimeLocalToISO(draft.reminder.datetime),
+            recurrence: draft.reminder.recurrence,
+          }
+        : null
     if (editing) {
       updateGoal(goal.id, {
         title: draft.title.trim(),
         category: draft.category,
         status: draft.status,
         dueDate: draft.dueDate || null,
+        reminder,
         subtasks,
       })
     } else {
@@ -78,6 +114,7 @@ export default function GoalForm({ goal, initialTitle, onClose }) {
         title: draft.title.trim(),
         category: draft.category,
         dueDate: draft.dueDate || null,
+        reminder,
         subtasks: subtasks.map((s) => ({ ...s, title: s.title })),
       })
     }
@@ -141,6 +178,62 @@ export default function GoalForm({ goal, initialTitle, onClose }) {
             onChange={(e) => patch({ dueDate: e.target.value || null })}
             className="w-full rounded-xl border border-line bg-canvas px-3.5 py-3 text-[15px] outline-none transition-colors focus:border-accent"
           />
+        </div>
+
+        <div className="rounded-2xl border border-line bg-canvas/60 p-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[14px] font-medium">Rappel</p>
+              <p className="text-[12px] text-subtle">Notification à une date et une heure.</p>
+            </div>
+            <Switch
+              checked={draft.reminder.enabled}
+              onChange={(enabled) =>
+                patch({
+                  reminder: {
+                    ...draft.reminder,
+                    enabled,
+                    datetime: enabled && !draft.reminder.datetime ? defaultDatetimeLocal() : draft.reminder.datetime,
+                  },
+                })
+              }
+            />
+          </div>
+
+          {draft.reminder.enabled && (
+            <div className="mt-3.5 flex flex-col gap-3">
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-medium text-subtle">
+                  Date et heure
+                </label>
+                <input
+                  type="datetime-local"
+                  value={draft.reminder.datetime}
+                  onChange={(e) =>
+                    patch({
+                      reminder: { ...draft.reminder, datetime: e.target.value },
+                    })
+                  }
+                  className="w-full rounded-xl border border-line bg-canvas px-3.5 py-3 text-[15px] outline-none transition-colors focus:border-accent"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-medium text-subtle">
+                  Répéter
+                </label>
+                <SegmentedControl
+                  options={RECURRENCES.map((r) => ({
+                    id: r.id,
+                    label: RECURRENCE_SHORT[r.id] ?? r.label,
+                  }))}
+                  value={draft.reminder.recurrence}
+                  onChange={(recurrence) =>
+                    patch({ reminder: { ...draft.reminder, recurrence } })
+                  }
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div>

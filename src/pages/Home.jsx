@@ -1,6 +1,13 @@
 import { CATEGORIES } from '../lib/constants'
-import { daysUntil, greeting, subtitleForDay, todayISO } from '../lib/format'
-import { useGoals } from '../store/goalsStore'
+import {
+  daysUntil,
+  formatReminderAt,
+  greeting,
+  subtitleForDay,
+  todayISO,
+} from '../lib/format'
+import { nextOccurrenceLabel } from '../lib/recurrence'
+import { upcomingReminders, useGoals } from '../store/goalsStore'
 import GoalCard from '../components/goals/GoalCard'
 import QuickNote from '../components/home/QuickNote'
 import StatCard from '../components/ui/StatCard'
@@ -66,6 +73,49 @@ function Upcoming({ goals, onOpenForm }) {
   )
 }
 
+function Reminders({ goals, onOpenForm }) {
+  const reminders = upcomingReminders(goals, 5)
+
+  if (reminders.length === 0) return null
+
+  return (
+    <section className="flex flex-col gap-2.5">
+      <h2 className="flex items-center gap-1.5 px-1 text-[13px] font-semibold tracking-wide text-subtle uppercase">
+        <Icon name="bell" className="size-3.5 text-accent" />
+        Rappels
+      </h2>
+      <div className="flex flex-col gap-2">
+        {reminders.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => onOpenForm(g)}
+            className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3.5 text-left transition-colors hover:border-accent active:bg-elevated"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+              <Icon name="bell" className="size-4.5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14.5px] font-semibold">
+                {g.title}
+              </span>
+              <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-subtle">
+                {formatReminderAt(g.reminder.nextAt)}
+                {nextOccurrenceLabel(g.reminder.recurrence) && (
+                  <span className="inline-flex items-center gap-1 text-faint">
+                    <Icon name="repeat" className="size-3" />
+                    {nextOccurrenceLabel(g.reminder.recurrence)}
+                  </span>
+                )}
+              </span>
+            </span>
+            <Icon name="chevron" className="size-4 -rotate-90 shrink-0 text-faint" />
+          </button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function Home({ onOpenForm }) {
   const goals = useGoals((s) => s.goals)
   const setView = useGoals((s) => s.setActiveView)
@@ -106,6 +156,10 @@ export default function Home({ onOpenForm }) {
         <StatCard icon="check" label="Terminés" value={done} />
         <StatCard icon="chart" label="Taux" value={`${rate}%`} />
       </div>
+
+      <section className="px-5">
+        <Reminders goals={goals} onOpenForm={onOpenForm} />
+      </section>
 
       {inProgress.length > 0 && (
         <section className="flex flex-col gap-3 px-5">

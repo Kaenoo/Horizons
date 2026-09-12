@@ -117,6 +117,26 @@ const D = {
       <path d="M8 11V7a4 4 0 018 0v4" />
     </>
   ),
+  bell: (
+    <>
+      <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" />
+    </>
+  ),
+  repeat: (
+    <>
+      <path d="M17 2l4 4-4 4" />
+      <path d="M3 11v-1a4 4 0 014-4h14" />
+      <path d="M7 22l-4-4 4-4" />
+      <path d="M21 13v1a4 4 0 01-4 4H3" />
+    </>
+  ),
+  send: (
+    <>
+      <path d="M22 2L11 13" />
+      <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+    </>
+  ),
 }
 
 export default function Icon({ name, className = 'size-5', strokeWidth = 1.8 }) {

@@ -1,0 +1,13 @@
+project_id = "horizons"
+
+[functions.push-subscribe]
+verify_jwt = true
+
+[functions.push-unsubscribe]
+verify_jwt = true
+
+[functions.push-upsert-jobs]
+verify_jwt = true
+
+[functions.send-reminders]
+verify_jwt = true

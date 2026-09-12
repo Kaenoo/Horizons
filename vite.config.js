@@ -9,6 +9,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'pwa-icon.svg'],
       manifest: {
@@ -32,10 +35,9 @@ export default defineConfig({
           { src: 'apple-touch-icon-180x180.png', sizes: '180x180', type: 'image/png' },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
-        navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
       },
       devOptions: { enabled: false },
     }),

@@ -52,6 +52,49 @@ export function isoToDateValue(iso) {
   return iso.slice(0, 10)
 }
 
+function pad2(n) {
+  return String(n).padStart(2, '0')
+}
+
+export function datetimeLocalToISO(value) {
+  if (!value) return null
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toISOString()
+}
+
+export function isoToDateTimeLocal(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(
+    d.getHours(),
+  )}:${pad2(d.getMinutes())}`
+}
+
+export function formatReminderAt(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const time = new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d)
+  const diff = daysUntil(iso)
+  if (diff === 0) return `Aujourd’hui à ${time}`
+  if (diff === 1) return `Demain à ${time}`
+  if (diff >= 2 && diff <= 6) {
+    const day = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(d)
+    const cap = day[0].toUpperCase() + day.slice(1, 3)
+    return `${cap}. à ${time}`
+  }
+  const date = new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+  }).format(d)
+  return `${date} à ${time}`
+}
+
 export function greeting() {
   const h = new Date().getHours()
   if (h < 6) return 'Bonne nuit'

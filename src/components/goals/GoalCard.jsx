@@ -4,7 +4,13 @@ import {
   useGoals,
 } from '../../store/goalsStore'
 import { STATUSES, STATUS_MAP } from '../../lib/constants'
-import { daysUntil, formatDate, formatRelativeDays } from '../../lib/format'
+import {
+  daysUntil,
+  formatDate,
+  formatRelativeDays,
+  formatReminderAt,
+} from '../../lib/format'
+import { nextOccurrenceLabel } from '../../lib/recurrence'
 import Button from '../ui/Button'
 import Checkbox from '../ui/Checkbox'
 import Icon from '../ui/Icon'
@@ -101,6 +107,16 @@ export default function GoalCard({ goal, onEdit }) {
                 >
                   <Icon name="flag" className="size-3.5" />
                   {formatRelativeDays(goal.dueDate)}
+                </span>
+              )}
+
+              {goal.reminder && goal.reminder.nextAt && (
+                <span className="inline-flex items-center gap-1">
+                  <Icon name="bell" className="size-3.5" />
+                  {formatReminderAt(goal.reminder.nextAt)}
+                  {nextOccurrenceLabel(goal.reminder.recurrence) && (
+                    <Icon name="repeat" className="size-3 text-faint" />
+                  )}
                 </span>
               )}
 

@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  dueReminders,
   goalProgress,
   normalizeGoal,
+  normalizeReminder,
+  upcomingReminders,
   useGoals,
 } from './goalsStore'
+import { advanceToFuture } from '../lib/recurrence'
 
 function resetStore() {
   useGoals.setState({
@@ -60,6 +64,7 @@ describe('normalizeGoal', () => {
     expect(g.category).toBe('short')
     expect(g.status).toBe('todo')
     expect(g.dueDate).toBeNull()
+    expect(g.reminder).toBeNull()
     expect(g.subtasks).toEqual([])
     expect(g.id).toBeTruthy()
     expect(g.createdAt).toBeTruthy()
@@ -73,6 +78,7 @@ describe('normalizeGoal', () => {
       category: 'ultra',
       status: 'bonjour',
       subtasks: [{ id: 'a', title: 'ok', done: 'yes' }, null, 'nope'],
+      reminder: { datetime: 42, recurrence: 'hebdoh' },
     })
     expect(typeof g.id).toBe('string')
     expect(g.title).toBe('Sans titre')
@@ -80,6 +86,44 @@ describe('normalizeGoal', () => {
     expect(g.status).toBe('todo')
     expect(g.subtasks).toHaveLength(1)
     expect(g.subtasks[0].done).toBe(true)
+    expect(g.reminder).toBeNull()
+  })
+
+  it('normalise un rappel valide', () => {
+    const g = normalizeGoal({
+      title: 'T',
+      reminder: {
+        datetime: '2026-09-20T14:30:00.000Z',
+        recurrence: 'weekly',
+        nextAt: '2026-09-27T14:30:00.000Z',
+      },
+    })
+    expect(g.reminder).toEqual({
+      datetime: '2026-09-20T14:30:00.000Z',
+      recurrence: 'weekly',
+      nextAt: '2026-09-27T14:30:00.000Z',
+    })
+  })
+})
+
+describe('normalizeReminder', () => {
+  it('rejette les entrées invalides', () => {
+    expect(normalizeReminder(null)).toBeNull()
+    expect(normalizeReminder({})).toBeNull()
+    expect(normalizeReminder({ datetime: 'pas une date' })).toBeNull()
+    expect(normalizeReminder({ datetime: '2026-09-20T09:00:00.000Z', recurrence: 'bogus' })).toEqual({
+      datetime: '2026-09-20T09:00:00.000Z',
+      recurrence: 'none',
+      nextAt: '2026-09-20T09:00:00.000Z',
+    })
+  })
+
+  it('nextAt retombe sur datetime quand absent', () => {
+    expect(normalizeReminder({ datetime: '2026-09-20T09:00:00.000Z' })).toEqual({
+      datetime: '2026-09-20T09:00:00.000Z',
+      recurrence: 'none',
+      nextAt: '2026-09-20T09:00:00.000Z',
+    })
   })
 })
 
@@ -202,5 +246,115 @@ describe('resetAll', () => {
     useGoals.getState().resetAll()
     expect(useGoals.getState().goals).toEqual([])
     expect(localStorage.getItem('horizons:goals:v1')).toBeNull()
+  })
+})
+
+describe('rappels (reminder)', () => {
+  it('addGoal accepte un rappel', () => {
+    const id = useGoals.getState().addGoal({
+      title: 'Avec rappel',
+      reminder: {
+        datetime: '2026-09-20T09:00:00.000Z',
+        recurrence: 'daily',
+      },
+    })
+    const g = useGoals.getState().goals.find((x) => x.id === id)
+    expect(g.reminder).toEqual({
+      datetime: '2026-09-20T09:00:00.000Z',
+      recurrence: 'daily',
+      nextAt: '2026-09-20T09:00:00.000Z',
+    })
+  })
+
+  it('updateGoal peut effacer un rappel', () => {
+    const id = useGoals.getState().addGoal({
+      title: 'R',
+      reminder: { datetime: '2026-09-20T09:00:00.000Z', recurrence: 'none' },
+    })
+    useGoals.getState().updateGoal(id, { reminder: null })
+    expect(useGoals.getState().goals[0].reminder).toBeNull()
+  })
+
+  it('advanceReminder saute à la prochaine occurrence future', () => {
+    const now = new Date()
+    const base = new Date(now.getTime() - 86400000).toISOString()
+    const id = useGoals.getState().addGoal({
+      title: 'Quotidien',
+      reminder: { datetime: base, recurrence: 'daily' },
+    })
+    useGoals.getState().advanceReminder(id)
+    const g = useGoals.getState().goals[0]
+    expect(g.reminder).not.toBeNull()
+    expect(new Date(g.reminder.nextAt).getTime()).toBeGreaterThan(now.getTime())
+  })
+
+  it('advanceReminder supprime le rappel one-shot', () => {
+    const id = useGoals.getState().addGoal({
+      title: 'One shot',
+      reminder: { datetime: '2026-09-20T09:00:00.000Z', recurrence: 'none' },
+    })
+    useGoals.getState().advanceReminder(id)
+    expect(useGoals.getState().goals[0].reminder).toBeNull()
+  })
+
+  it('advanceToFuture(e) avance depuis une date passée', () => {
+    const next = advanceToFuture(
+      new Date('2026-09-01T09:00:00Z'),
+      'weekly',
+      new Date('2026-09-20T09:00:00Z'),
+    )
+    expect(next.toISOString()).toBe('2026-09-22T09:00:00.000Z')
+  })
+})
+
+describe('facilitateurs de rappels', () => {
+  function withReminder(nextAt, extra = {}) {
+    return makeGoal({
+      title: `R ${nextAt}`,
+      status: 'todo',
+      reminder: {
+        datetime: nextAt,
+        recurrence: 'none',
+        nextAt,
+      },
+      ...extra,
+    })
+  }
+
+  it('dueReminders ne retourne que les rappels échus et actifs', () => {
+    const due = '2020-01-01T09:00:00.000Z'
+    const later = '2099-01-01T09:00:00.000Z'
+    const goals = [
+      withReminder(due),
+      withReminder(due, { status: 'done' }),
+      withReminder(later),
+      makeGoal({ title: 'sans rappel' }),
+    ]
+    const res = dueReminders(goals)
+    expect(res).toHaveLength(1)
+    expect(res[0].title).toBe(`R ${due}`)
+  })
+
+  it('upcomingReminders trie par prochaine échéance', () => {
+    const goals = [
+      withReminder('2099-03-01T09:00:00.000Z'),
+      withReminder('2099-01-01T09:00:00.000Z'),
+      withReminder('2098-01-01T09:00:00.000Z'),
+      withReminder('2098-01-01T09:00:00.000Z', { status: 'done' }),
+    ]
+    const res = upcomingReminders(goals)
+    expect(res.map((g) => g.reminder.nextAt)).toEqual([
+      '2098-01-01T09:00:00.000Z',
+      '2099-01-01T09:00:00.000Z',
+      '2099-03-01T09:00:00.000Z',
+    ])
+  })
+
+  it('upcomingReminders respecte le limite', () => {
+    const goals = [
+      withReminder('2099-03-01T09:00:00.000Z'),
+      withReminder('2099-01-01T09:00:00.000Z'),
+    ]
+    expect(upcomingReminders(goals, 1)).toHaveLength(1)
   })
 })
