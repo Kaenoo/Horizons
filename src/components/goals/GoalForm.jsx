@@ -8,9 +8,9 @@ import Icon from '../ui/Icon'
 import SegmentedControl from '../ui/SegmentedControl'
 import Sheet from '../ui/Sheet'
 
-function draftFromGoal(goal) {
+function draftFromGoal(goal, initialTitle) {
   return {
-    title: goal?.title ?? '',
+    title: goal?.title ?? initialTitle ?? '',
     category: goal?.category ?? 'short',
     status: goal?.status ?? 'todo',
     dueDate: goal?.dueDate ?? '',
@@ -18,11 +18,11 @@ function draftFromGoal(goal) {
   }
 }
 
-export default function GoalForm({ goal, onClose }) {
+export default function GoalForm({ goal, initialTitle, onClose }) {
   const addGoal = useGoals((s) => s.addGoal)
   const updateGoal = useGoals((s) => s.updateGoal)
 
-  const [draft, setDraft] = useState(() => draftFromGoal(goal))
+  const [draft, setDraft] = useState(() => draftFromGoal(goal, initialTitle))
   const [dirty, setDirty] = useState(false)
   const titleRef = useRef(null)
 

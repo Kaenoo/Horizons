@@ -2,6 +2,7 @@ import { CATEGORIES } from '../lib/constants'
 import { daysUntil, greeting, subtitleForDay, todayISO } from '../lib/format'
 import { useGoals } from '../store/goalsStore'
 import GoalCard from '../components/goals/GoalCard'
+import QuickNote from '../components/home/QuickNote'
 import StatCard from '../components/ui/StatCard'
 import Icon from '../components/ui/Icon'
 
@@ -95,6 +96,10 @@ export default function Home({ onOpenForm }) {
           <span className="text-accent"> c’est quoi la suite ?</span>
         </h1>
       </header>
+
+      <section className="px-5">
+        <QuickNote onOpenOptions={(t) => onOpenForm(null, t)} />
+      </section>
 
       <div className="grid grid-cols-3 gap-2.5 px-5">
         <StatCard icon="target" label="En cours" value={active} accent />

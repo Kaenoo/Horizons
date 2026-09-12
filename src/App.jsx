@@ -18,11 +18,13 @@ export default function App() {
   const view = useGoals((s) => s.activeView)
   const [formOpen, setFormOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState(null)
+  const [initialTitle, setInitialTitle] = useState('')
 
   const Page = PAGES[view] ?? Home
 
-  const openForm = (goal) => {
+  const openForm = (goal, title = '') => {
     setEditingGoal(goal ?? null)
+    setInitialTitle(title)
     setFormOpen(true)
   }
   const closeForm = () => setFormOpen(false)
@@ -39,6 +41,7 @@ export default function App() {
         <GoalForm
           key={editingGoal?.id ?? 'new'}
           goal={editingGoal}
+          initialTitle={initialTitle}
           onClose={closeForm}
         />
       )}
