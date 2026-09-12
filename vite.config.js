@@ -40,4 +40,8 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.{js,jsx}'],
+  },
 })
