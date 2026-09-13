@@ -4,7 +4,6 @@ import { useReminderScheduler } from './hooks/useReminderScheduler'
 import { usePushReminders } from './hooks/usePushReminders'
 import BottomNav from './components/layout/BottomNav'
 import GoalForm from './components/goals/GoalForm'
-import ReminderToast from './components/ui/ReminderToast'
 import Home from './pages/Home'
 import Horizons from './pages/Horizons'
 import Stats from './pages/Stats'
@@ -42,8 +41,6 @@ export default function App() {
       </main>
 
       <BottomNav />
-
-      <ReminderToast onOpenForm={openForm} />
 
       {formOpen && (
         <GoalForm

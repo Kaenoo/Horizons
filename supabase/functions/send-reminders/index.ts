@@ -39,8 +39,8 @@ Deno.serve(async (req) => {
         })
         await subscriber.pushTextMessage(
           JSON.stringify({
-            title: 'Rappel Horizons',
-            body: job.title,
+            title: job.title,
+            body: '',
             tag: `reminder-${job.goal_id}`,
             url: './',
           }),

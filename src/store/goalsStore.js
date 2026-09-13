@@ -83,12 +83,9 @@ export const useGoals = create((set, _get) => ({
   hasHydrated: true,
   activeView: 'home',
   horizonsTab: 'short',
-  lastFired: null,
 
   setActiveView: (view) => set({ activeView: view }),
   setHorizonsTab: (tab) => set({ horizonsTab: tab }),
-  setLastFired: (payload) => set({ lastFired: payload }),
-  clearLastFired: () => set({ lastFired: null }),
 
   addGoal: ({ title, category = 'short', dueDate = null, status = 'todo', subtasks = [], reminder = null }) => {
     const now = new Date().toISOString()

@@ -87,7 +87,7 @@ Le build utilise `base: './'` : tous les chemins (assets, manifest, Service Work
 
 ## 🔔 Notifications push (optionnel, Supabase)
 
-Sans configuration, l'app garde son comportement **100% hors-ligne** (rappel + toast + notification
+Sans configuration, l'app garde son comportement **100% hors-ligne** (notification
 système uniquement quand l'app est ouverte sur Android/desktop). Pour des rappels livrés **app fermée**
 (y compris sur **iPhone**, app installée sur l'écran d'accueil, iOS 16.4+) :
 
@@ -129,6 +129,10 @@ système uniquement quand l'app est ouverte sur Android/desktop). Pour des rappe
 > iPhone : iOS 16.4+ et app **ajoutée à l'écran d'accueil** (PWA standalone), puis ouverte depuis son
 > icône. Le contenu des rappels (titres + horaires) transite alors par Supabase vers le service de
 > push Apple. Sans cette option, rien ne quitte l'appareil.
+>
+> Changer la clé VAPID : désactivez puis réactivez les notifications dans Réglages — l'app recrée
+> alors l'abonnement (et purge l'ancien sur Supabase). Si rien n'arrive, vérifiez le SQL cron
+> (`horizons-send-reminders`), les secrets `VAPID_*`, et que `send-reminders` répond `{"ok":true}`.
 
 ## 🔒 Confidentialité
 

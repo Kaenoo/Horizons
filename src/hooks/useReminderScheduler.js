@@ -10,17 +10,14 @@ export function useReminderScheduler() {
   useEffect(() => {
     const tick = () => {
       const state = useGoals.getState()
-      const pushActive = isPushActive()
+      if (isPushActive()) return
       for (const g of dueReminders(state.goals)) {
         const key = `${g.id}:${g.reminder.nextAt}`
         if (firedKeys.has(key)) continue
         firedKeys.add(key)
         if (firedKeys.size > 500) firedKeys.clear()
 
-        if (!pushActive) {
-          showSystemNotification('Rappel Horizons', g.title)
-        }
-        state.setLastFired({ goalId: g.id, at: new Date().toISOString() })
+        showSystemNotification(g.title)
         state.advanceReminder(g.id)
       }
     }

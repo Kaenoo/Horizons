@@ -104,13 +104,17 @@ export async function enablePush() {
     const permission = await window.Notification.requestPermission()
     if (permission !== 'granted') return { ok: false, reason: 'permission' }
     const reg = await navigator.serviceWorker.ready
-    let subscription = await reg.pushManager.getSubscription()
-    if (!subscription) {
-      subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(cfg.vapidPublicKey),
-      })
+    const existing = await reg.pushManager.getSubscription()
+    if (existing) {
+      await existing.unsubscribe().catch(() => {})
+      await callFunction(cfg, 'push-unsubscribe', {
+        deviceUid: getDeviceUid(),
+      }).catch(() => {})
     }
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(cfg.vapidPublicKey),
+    })
     const res = await callFunction(cfg, 'push-subscribe', {
       deviceUid: getDeviceUid(),
       subscription: subscription.toJSON(),

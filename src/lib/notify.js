@@ -22,7 +22,7 @@ export async function showSystemNotification(title, body) {
     const reg = await navigator.serviceWorker?.ready
     if (reg && typeof reg.showNotification === 'function') {
       await reg.showNotification(title, {
-        body,
+        body: body ?? '',
         tag: 'horizons-reminder',
         icon: 'pwa-192x192.png',
         badge: 'pwa-192x192.png',
