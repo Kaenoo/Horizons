@@ -15,7 +15,7 @@ function StatusFilter({ value, onChange, counts }) {
   ]
 
   return (
-    <div className="no-scrollbar flex gap-2 overflow-x-auto px-5">
+    <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 md:px-8 lg:px-10 md:flex-wrap">
       {options.map((o) => {
         const active = value === o.id
         return (
@@ -60,8 +60,8 @@ export default function Horizons({ onOpenForm }) {
   const cat = CATEGORY_MAP[tab]
 
   return (
-    <div className="anim-view flex flex-col gap-4 pb-6">
-      <header className="safe-top flex items-center justify-between px-5">
+    <div className="anim-view mx-auto flex w-full max-w-md flex-col gap-4 pb-6 md:max-w-4xl lg:max-w-5xl">
+      <header className="safe-top flex items-center justify-between px-5 md:px-8 lg:px-10">
         <div>
           <p className="text-[13px] text-subtle">Trois horizons, un cap</p>
           <h1 className="text-[24px] font-bold tracking-tight">Horizons</h1>
@@ -75,11 +75,11 @@ export default function Horizons({ onOpenForm }) {
         </button>
       </header>
 
-      <div className="px-5">
+      <div className="px-5 md:px-8 lg:px-10">
         <GoalTabs />
       </div>
 
-      <p className="px-5 text-[12.5px] text-subtle">
+      <p className="px-5 md:px-8 lg:px-10 text-[12.5px] text-subtle">
         <span className={`mr-1.5 inline-block size-2 rounded-full ${cat.color}`} />
         {cat.hint} · {baseCounts.all} objectif{baseCounts.all > 1 ? 's' : ''}
       </p>
@@ -114,7 +114,10 @@ export default function Horizons({ onOpenForm }) {
           }
         />
       ) : (
-        <div key={statusFilter} className="anim-fade-in flex flex-col gap-3 px-5">
+        <div
+          key={statusFilter}
+          className="anim-fade-in flex flex-col gap-3 px-5 md:px-8 lg:px-10 md:grid md:grid-cols-2 md:gap-4 xl:grid-cols-3"
+        >
           {visible.map((goal) => (
             <GoalCard key={goal.id} goal={goal} onEdit={onOpenForm} />
           ))}

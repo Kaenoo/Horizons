@@ -25,7 +25,7 @@ import Sheet from '../components/ui/Sheet'
 
 function Section({ title, children }) {
   return (
-    <section className="px-5">
+    <section className="px-5 md:px-8 lg:px-10">
       <h2 className="mb-2 text-[12.5px] font-semibold tracking-wide text-subtle uppercase">
         {title}
       </h2>
@@ -206,8 +206,8 @@ export default function Settings() {
   const needIosInstall = pushOnIos() && !isInstalledPwa()
 
   return (
-    <div className="anim-view flex flex-col gap-6 pb-8">
-      <header className="safe-top px-5">
+    <div className="anim-view mx-auto flex w-full max-w-md flex-col gap-6 pb-8 md:max-w-4xl lg:max-w-5xl">
+      <header className="safe-top px-5 md:px-8 lg:px-10">
         <p className="text-[13px] text-subtle">Apparence & données</p>
         <h1 className="text-[24px] font-bold tracking-tight">Réglages</h1>
       </header>
@@ -516,7 +516,7 @@ export default function Settings() {
         </div>
       </Section>
 
-      <p className="px-5 text-center text-[11.5px] leading-relaxed text-faint">
+      <p className="px-5 md:px-8 lg:px-10 text-center text-[11.5px] leading-relaxed text-faint">
         Vos objectifs restent sur cet appareil.
         <br />
         Aucune donnée n’est envoyée sur Internet.

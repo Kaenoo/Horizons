@@ -32,8 +32,8 @@ export default function Stats() {
       : 0
 
   return (
-    <div className="anim-view flex flex-col gap-6 pb-6">
-      <header className="safe-top px-5">
+    <div className="anim-view mx-auto flex w-full max-w-md flex-col gap-6 pb-6 md:max-w-4xl lg:max-w-5xl">
+      <header className="safe-top px-5 md:px-8 lg:px-10">
         <p className="text-[13px] text-subtle">Votre progression</p>
         <h1 className="text-[24px] font-bold tracking-tight">Stats</h1>
       </header>
@@ -46,7 +46,7 @@ export default function Stats() {
         />
       ) : (
         <>
-          <section className="flex flex-col items-center gap-2 px-5">
+          <section className="flex flex-col items-center gap-2 px-5 md:px-8 lg:px-10">
             <Ring value={total ? done / total : 0} size={152} stroke={11}>
               <span className="text-[30px] leading-none font-bold tabular-nums text-ink">
                 {rate}%
@@ -57,57 +57,59 @@ export default function Stats() {
             </Ring>
           </section>
 
-          <section className="mx-5 rounded-2xl border border-line bg-surface p-4">
+          <section className="mx-5 rounded-2xl border border-line bg-surface p-4 md:mx-8 lg:mx-10">
             <h2 className="mb-3 text-[13px] font-semibold tracking-wide text-subtle uppercase">
               Par horizon
             </h2>
             <StatsBars goals={goals} />
           </section>
 
-          <section className="mx-5 rounded-2xl border border-line bg-surface p-4">
-            <h2 className="mb-3 text-[13px] font-semibold tracking-wide text-subtle uppercase">
-              Sous-tâches
-            </h2>
-            <div className="flex items-center gap-4">
-              <Ring value={subtaskRate / 100} size={72} stroke={7}>
-                <span className="text-[15px] font-bold tabular-nums">{subtaskRate}%</span>
-              </Ring>
-              <p className="text-[13px] text-subtle">
-                <span className="font-semibold text-ink">{subtaskDone}</span> sur{' '}
-                <span className="font-semibold text-ink">{subtaskTotal}</span>{' '}
-                sous-tâches cochées.
-              </p>
-            </div>
-          </section>
+          <div className="grid gap-5 px-5 md:px-8 lg:grid-cols-2 lg:items-start lg:px-10">
+            <section className="rounded-2xl border border-line bg-surface p-4">
+              <h2 className="mb-3 text-[13px] font-semibold tracking-wide text-subtle uppercase">
+                Sous-tâches
+              </h2>
+              <div className="flex items-center gap-4">
+                <Ring value={subtaskRate / 100} size={72} stroke={7}>
+                  <span className="text-[15px] font-bold tabular-nums">{subtaskRate}%</span>
+                </Ring>
+                <p className="text-[13px] text-subtle">
+                  <span className="font-semibold text-ink">{subtaskDone}</span> sur{' '}
+                  <span className="font-semibold text-ink">{subtaskTotal}</span>{' '}
+                  sous-tâches cochées.
+                </p>
+              </div>
+            </section>
 
-          <section className="mx-5 rounded-2xl border border-line bg-surface p-4">
-            <h2 className="mb-3 text-[13px] font-semibold tracking-wide text-subtle uppercase">
-              Par statut
-            </h2>
-            <div className="flex flex-col gap-2.5">
-              {STATUSES.map((s) => {
-                const count = s.id === 'todo' ? todo : s.id === 'in_progress' ? inProgress : done
-                const pct = total ? Math.round((count / total) * 100) : 0
-                return (
-                  <div key={s.id} className="flex items-center gap-2.5">
-                    <span className={`size-2 shrink-0 rounded-full ${STATUS_DOT[s.id]}`} />
-                    <span className="flex-1 text-[13.5px]">{STATUS_MAP[s.id].label}</span>
-                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-line">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${STATUS_DOT[s.id]}`}
-                        style={{ width: `${pct}%` }}
-                      />
+            <section className="rounded-2xl border border-line bg-surface p-4">
+              <h2 className="mb-3 text-[13px] font-semibold tracking-wide text-subtle uppercase">
+                Par statut
+              </h2>
+              <div className="flex flex-col gap-2.5">
+                {STATUSES.map((s) => {
+                  const count = s.id === 'todo' ? todo : s.id === 'in_progress' ? inProgress : done
+                  const pct = total ? Math.round((count / total) * 100) : 0
+                  return (
+                    <div key={s.id} className="flex items-center gap-2.5">
+                      <span className={`size-2 shrink-0 rounded-full ${STATUS_DOT[s.id]}`} />
+                      <span className="flex-1 text-[13.5px]">{STATUS_MAP[s.id].label}</span>
+                      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-line">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${STATUS_DOT[s.id]}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-8 text-right text-[12.5px] font-medium tabular-nums text-subtle">
+                        {count}
+                      </span>
                     </div>
-                    <span className="w-8 text-right text-[12.5px] font-medium tabular-nums text-subtle">
-                      {count}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
+                  )
+                })}
+              </div>
+            </section>
+          </div>
 
-          <p className="flex items-center justify-center gap-1.5 px-5 text-[12px] text-faint">
+          <p className="flex items-center justify-center gap-1.5 px-5 text-[12px] text-faint md:px-8 lg:px-10">
             <Icon name="lock" className="size-3.5" />
             Statistiques calculées localement
           </p>

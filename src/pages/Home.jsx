@@ -22,7 +22,7 @@ function CategoryPreview({ goals }) {
       <h2 className="mb-3 text-[13px] font-semibold tracking-wide text-subtle uppercase">
         Mes horizons
       </h2>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-2.5">
         {CATEGORIES.map((c) => {
           const list = goals.filter((g) => g.category === c.id)
           const done = list.filter((g) => g.status === 'done').length
@@ -63,12 +63,14 @@ function Upcoming({ goals, onOpenForm }) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="flex items-center gap-1.5 px-1 text-[13px] font-semibold tracking-wide text-subtle uppercase">
-        <Icon name="flag" className="size-3.5 text-warn" />
-        Échéances imminentes
-      </h2>
-      {upcoming.map((g) => (
-        <GoalCard key={g.id} goal={g} onEdit={onOpenForm} />
-      ))}
+          <Icon name="flag" className="size-3.5 text-warn" />
+          Échéances imminentes
+        </h2>
+        <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4">
+          {upcoming.map((g) => (
+            <GoalCard key={g.id} goal={g} onEdit={onOpenForm} />
+          ))}
+        </div>
     </section>
   )
 }
@@ -84,7 +86,7 @@ function Reminders({ goals, onOpenForm }) {
         <Icon name="bell" className="size-3.5 text-accent" />
         Rappels
       </h2>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-3">
         {reminders.map((g) => (
           <button
             key={g.id}
@@ -138,8 +140,8 @@ export default function Home({ onOpenForm }) {
     .slice(0, 2)
 
   return (
-    <div className="anim-view flex flex-col gap-6 pb-6">
-      <header className="safe-top flex flex-col gap-1 px-5">
+    <div className="anim-view mx-auto flex w-full max-w-md flex-col gap-6 pb-6 md:max-w-4xl lg:max-w-5xl">
+      <header className="safe-top flex flex-col gap-1 px-5 md:px-8 lg:px-10">
         <p className="text-[13px] text-subtle">{subtitleForDay()}</p>
         <h1 className="text-[24px] leading-tight font-bold tracking-tight">
           {greeting()},
@@ -147,37 +149,39 @@ export default function Home({ onOpenForm }) {
         </h1>
       </header>
 
-      <section className="px-5">
+      <section className="px-5 md:px-8 lg:px-10">
         <QuickNote onOpenOptions={(t) => onOpenForm(null, t)} />
       </section>
 
-      <div className="grid grid-cols-3 gap-2.5 px-5">
+      <div className="grid grid-cols-3 gap-2.5 px-5 md:px-8 lg:px-10">
         <StatCard icon="target" label="En cours" value={active} accent />
         <StatCard icon="check" label="Terminés" value={done} />
         <StatCard icon="chart" label="Taux" value={`${rate}%`} />
       </div>
 
-      <section className="px-5">
+      <section className="px-5 md:px-8 lg:px-10">
         <Reminders goals={goals} onOpenForm={onOpenForm} />
       </section>
 
       {inProgress.length > 0 && (
-        <section className="flex flex-col gap-3 px-5">
+        <section className="flex flex-col gap-3 px-5 md:px-8 lg:px-10">
           <h2 className="text-[13px] font-semibold tracking-wide text-subtle uppercase">
             En cours
           </h2>
-          {inProgress.map((g) => (
-            <GoalCard key={g.id} goal={g} onEdit={onOpenForm} />
-          ))}
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4">
+            {inProgress.map((g) => (
+              <GoalCard key={g.id} goal={g} onEdit={onOpenForm} />
+            ))}
+          </div>
         </section>
       )}
 
-      <section className="px-5">
+      <section className="px-5 md:px-8 lg:px-10">
         <Upcoming goals={goals} onOpenForm={onOpenForm} />
       </section>
 
       {done === 0 && total === 0 ? (
-        <section className="px-5">
+        <section className="px-5 md:px-8 lg:px-10">
           <button
             onClick={() => setView('horizons')}
             className="anim-fade-in flex w-full items-center gap-4 rounded-2xl border border-dashed border-line bg-surface p-4 text-left transition-colors hover:border-accent"
@@ -197,13 +201,13 @@ export default function Home({ onOpenForm }) {
           </button>
         </section>
       ) : (
-        <section className="px-5">
+        <section className="px-5 md:px-8 lg:px-10">
           <CategoryPreview goals={goals} />
         </section>
       )}
 
       {soon > 0 && (
-        <p className="px-5 text-center text-[12px] text-subtle">
+        <p className="px-5 md:px-8 lg:px-10 text-center text-[12px] text-subtle">
           <Icon name="clock" className="mr-1 inline size-3.5 align-[-2px]" />
           {soon} objectif{soon > 1 ? 's' : ''} à moins de 7 jours
         </p>

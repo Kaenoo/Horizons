@@ -35,7 +35,7 @@ export default function App() {
   const closeForm = () => setFormOpen(false)
 
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-canvas text-ink">
+    <div className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-canvas text-ink md:max-w-none md:flex-row">
       <main className="flex-1 overflow-y-auto overscroll-contain">
         <Page key={view} onOpenForm={openForm} />
       </main>

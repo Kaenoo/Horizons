@@ -26,7 +26,7 @@ export default function Sheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-[2px] anim-fade-in"
+      className="anim-fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-[2px] md:items-center md:p-6"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose?.()
       }}
@@ -34,9 +34,9 @@ export default function Sheet({
       <div
         role="dialog"
         aria-modal="true"
-        className="anim-sheet-up flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-[1.75rem] border-t border-white/10 bg-surface shadow-2xl"
+        className="anim-sheet-up flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-[1.75rem] border-t border-white/10 bg-surface shadow-2xl md:max-h-[82dvh] md:max-w-lg md:rounded-2xl md:border md:border-line"
       >
-        <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-line" />
+        <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-line md:hidden" />
 
         <div className="flex items-center gap-3 px-5 pb-1 pt-3">
           {icon && (
